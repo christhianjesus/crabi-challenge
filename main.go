@@ -14,6 +14,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// Health
+	e.GET("/health", nil)
+
 	// Auth routes
 	e.POST("/signin", nil)
 	e.POST("/login", nil)
