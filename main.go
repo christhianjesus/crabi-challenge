@@ -27,5 +27,5 @@ func main() {
 	// App routes
 	v1.GET("/user", nil)
 
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":" + c.GetHttpPort()))
 }
