@@ -5,6 +5,7 @@ import "os"
 type Context struct {
 	jwtKey   string
 	httpPort string
+	mongoURL string
 }
 
 func (c *Context) GetJwtKey() []byte {
@@ -19,9 +20,14 @@ func (c *Context) GetHttpPort() string {
 	return c.httpPort
 }
 
+func (c *Context) GetMongoURL() string {
+	return c.mongoURL
+}
+
 func GetContext() *Context {
 	return &Context{
 		jwtKey:   os.Getenv("JWT_KEY"),
 		httpPort: os.Getenv("HTTP_PORT"),
+		mongoURL: os.Getenv("MONGODB_URL"),
 	}
 }

@@ -1,14 +1,42 @@
 package main
 
 import (
+	"context"
+	"log"
+	"time"
+
+	"github.com/christhianjesus/crabi-challenge/internal/infrastructure"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func main() {
-	e := echo.New()
 	c := GetContext()
+	mongoOptions := options.Client().ApplyURI(c.GetMongoURL())
+
+	mongoClient, err := mongo.Connect(mongoOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mongoDB := mongoClient.Database("default")
+
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		if err = mongoClient.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	// TODO
+	_ = infrastructure.NewMongoUserRepository(mongoDB)
+
+	e := echo.New()
 
 	// Root level middleware
 	e.Use(middleware.Logger())
