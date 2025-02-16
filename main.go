@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/christhianjesus/crabi-challenge/internal/application"
 	"github.com/christhianjesus/crabi-challenge/internal/infrastructure"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -15,14 +16,11 @@ import (
 
 func main() {
 	c := GetContext()
-	mongoOptions := options.Client().ApplyURI(c.GetMongoURL())
 
-	mongoClient, err := mongo.Connect(mongoOptions)
+	mongoClient, err := mongo.Connect(options.Client().ApplyURI(c.GetMongoURL()))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	mongoDB := mongoClient.Database("default")
 
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -33,8 +31,22 @@ func main() {
 		}
 	}()
 
-	// TODO
-	_ = infrastructure.NewMongoUserRepository(mongoDB)
+	// Repositories
+	mongoUserRepository := infrastructure.NewMongoUserRepository(mongoClient.Database("default"))
+
+	// Services
+	userService := application.NewUserService(mongoUserRepository)
+	authService := application.NewAuthService(mongoUserRepository, userService)
+
+	// Handlers
+	userHandler := infrastructure.NewUserHandler(userService)
+	authHandler := infrastructure.NewAuthHandler(authService, []byte(c.jwtKey))
+
+	// Middlewares
+	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
+		SuccessHandler: authHandler.SetUserID,
+		SigningKey:     []byte(c.jwtKey),
+	})
 
 	e := echo.New()
 
@@ -46,14 +58,14 @@ func main() {
 	e.GET("/health", nil)
 
 	// Auth routes
-	e.POST("/signin", nil)
-	e.POST("/login", nil)
+	e.POST("/signin", authHandler.Signin)
+	e.POST("/login", authHandler.Login)
 
 	// versioning endpoints
-	v1 := e.Group("/v1", echojwt.JWT(c.GetJwtKey()))
+	v1 := e.Group("/v1", jwtMiddleware)
 
 	// App routes
-	v1.GET("/user", nil)
+	v1.GET("/user", userHandler.Get)
 
 	e.Logger.Fatal(e.Start(":" + c.GetHttpPort()))
 }
