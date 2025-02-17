@@ -40,7 +40,7 @@ func main() {
 
 	// Handlers
 	userHandler := infrastructure.NewUserHandler(userService)
-	authHandler := infrastructure.NewAuthHandler(authService, []byte(c.jwtKey))
+	authHandler := infrastructure.NewAuthHandler(authService, c.jwtKey)
 
 	// Middlewares
 	jwtMiddleware := echojwt.WithConfig(echojwt.Config{

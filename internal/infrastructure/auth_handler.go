@@ -11,10 +11,10 @@ import (
 
 type authHandler struct {
 	srv application.AuthService
-	sec []byte
+	sec string
 }
 
-func NewAuthHandler(srv application.AuthService, secret []byte) *authHandler {
+func NewAuthHandler(srv application.AuthService, secret string) *authHandler {
 	return &authHandler{srv, secret}
 }
 
@@ -51,7 +51,7 @@ func (h *authHandler) Login(c echo.Context) error {
 		"user_id": userID,
 	})
 
-	tokenString, err := token.SignedString(h.sec)
+	tokenString, err := token.SignedString([]byte(h.sec))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}

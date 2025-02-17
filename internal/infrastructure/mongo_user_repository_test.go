@@ -66,7 +66,7 @@ func TestGetIdAndHash_FindOneError(t *testing.T) {
 	id, hash, err := murm.repo.GetIdAndHash(context.Context(nil), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, mongo.ErrNilDocument, err)
+	assert.EqualError(t, err, mongo.ErrNilDocument.Error())
 	assert.Empty(t, id)
 	assert.Empty(t, hash)
 }
@@ -109,7 +109,7 @@ func TestGet_FindOneError(t *testing.T) {
 	user, err := murm.repo.GetUser(context.Context(nil), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, mongo.ErrNilDocument, err)
+	assert.EqualError(t, err, mongo.ErrNilDocument.Error())
 	assert.Nil(t, user)
 }
 
