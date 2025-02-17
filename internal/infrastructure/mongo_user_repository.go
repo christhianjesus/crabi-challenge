@@ -12,9 +12,9 @@ import (
 )
 
 type MongoUserRepository interface {
-	Create(ctx context.Context, user *domain.User) error
+	CreateUser(ctx context.Context, user *domain.User) error
 	GetIdAndHash(ctx context.Context, email string) (string, string, error)
-	Get(ctx context.Context, userID string) (*domain.User, error)
+	GetUser(ctx context.Context, userID string) (*domain.User, error)
 }
 
 type mongoUserRepository struct {
@@ -46,7 +46,7 @@ func NewMongoUserRepository(db mongoDatabase) MongoUserRepository {
 	return &mongoUserRepository{coll: db.Collection("user")}
 }
 
-func (r *mongoUserRepository) Create(ctx context.Context, user *domain.User) error {
+func (r *mongoUserRepository) CreateUser(ctx context.Context, user *domain.User) error {
 	currentTime := time.Now()
 	mongoUser := &mongoUser{
 		ID:        bson.NewObjectIDFromTimestamp(currentTime),
@@ -80,7 +80,7 @@ func (r *mongoUserRepository) GetIdAndHash(ctx context.Context, email string) (s
 	return user.ID.Hex(), user.Password, nil
 }
 
-func (r *mongoUserRepository) Get(ctx context.Context, userID string) (*domain.User, error) {
+func (r *mongoUserRepository) GetUser(ctx context.Context, userID string) (*domain.User, error) {
 	opts := options.FindOne().SetProjection(bson.M{"password": 0})
 	mongoID, _ := bson.ObjectIDFromHex(userID)
 

@@ -43,7 +43,7 @@ func TestCreate_InsertOneError(t *testing.T) {
 	murm := setupMongoUserRepository(t)
 	murm.collection.On("InsertOne", mock.IsType(nil), mock.AnythingOfType("*infrastructure.mongoUser")).Return(nil, assert.AnError)
 
-	err := murm.repo.Create(context.Context(nil), &domain.User{})
+	err := murm.repo.CreateUser(context.Context(nil), &domain.User{})
 
 	assert.Error(t, err)
 }
@@ -52,7 +52,7 @@ func TestCreate_InsertOneOK(t *testing.T) {
 	murm := setupMongoUserRepository(t)
 	murm.collection.On("InsertOne", mock.IsType(nil), mock.AnythingOfType("*infrastructure.mongoUser")).Return(nil, nil)
 
-	err := murm.repo.Create(context.Context(nil), &domain.User{})
+	err := murm.repo.CreateUser(context.Context(nil), &domain.User{})
 
 	assert.NoError(t, err)
 }
@@ -66,7 +66,7 @@ func TestGetIdAndHash_FindOneError(t *testing.T) {
 	id, hash, err := murm.repo.GetIdAndHash(context.Context(nil), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, mongo.ErrNilDocument, err)
+	assert.EqualError(t, err, mongo.ErrNilDocument.Error())
 	assert.Empty(t, id)
 	assert.Empty(t, hash)
 }
@@ -106,10 +106,10 @@ func TestGet_FindOneError(t *testing.T) {
 	murm := setupMongoUserRepository(t)
 	murm.collection.On("FindOne", mock.IsType(nil), mock.AnythingOfType("bson.M"), mock.AnythingOfType("*options.FindOneOptionsBuilder")).Return(res)
 
-	user, err := murm.repo.Get(context.Context(nil), "")
+	user, err := murm.repo.GetUser(context.Context(nil), "")
 
 	assert.Error(t, err)
-	assert.Equal(t, mongo.ErrNilDocument, err)
+	assert.EqualError(t, err, mongo.ErrNilDocument.Error())
 	assert.Nil(t, user)
 }
 
@@ -119,7 +119,7 @@ func TestGet_FindOneErrorNoDocuments(t *testing.T) {
 	murm := setupMongoUserRepository(t)
 	murm.collection.On("FindOne", mock.IsType(nil), mock.AnythingOfType("bson.M"), mock.AnythingOfType("*options.FindOneOptionsBuilder")).Return(res)
 
-	user, err := murm.repo.Get(context.Context(nil), "")
+	user, err := murm.repo.GetUser(context.Context(nil), "")
 
 	assert.Error(t, err)
 	assert.NotEqual(t, mongo.ErrNilDocument, err)
@@ -134,7 +134,7 @@ func TestGet_FindOneOK(t *testing.T) {
 	murm := setupMongoUserRepository(t)
 	murm.collection.On("FindOne", mock.IsType(nil), mock.AnythingOfType("bson.M"), mock.AnythingOfType("*options.FindOneOptionsBuilder")).Return(res)
 
-	user, err := murm.repo.Get(context.Context(nil), "")
+	user, err := murm.repo.GetUser(context.Context(nil), "")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
