@@ -1,8 +1,11 @@
 services:
   db:
-    image: mongo
+    build:
+      context: .
+      dockerfile: build/db/Dockerfile
     restart: always
     environment:
+      MONGO_INITDB_DATABASE: default
       MONGO_INITDB_ROOT_USERNAME: username
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
