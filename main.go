@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/christhianjesus/crabi-challenge/internal/application"
@@ -33,9 +34,10 @@ func main() {
 
 	// Repositories
 	mongoUserRepository := infrastructure.NewMongoUserRepository(mongoClient.Database("default"))
+	pldRepository := infrastructure.NewPLDRepository(http.DefaultClient, c.pldURL)
 
 	// Services
-	userService := application.NewUserService(mongoUserRepository)
+	userService := application.NewUserService(mongoUserRepository, pldRepository)
 	authService := application.NewAuthService(mongoUserRepository, userService)
 
 	// Handlers
