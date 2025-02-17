@@ -10,6 +10,7 @@ import (
 
 	"github.com/christhianjesus/crabi-challenge/mocks"
 	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -161,4 +162,28 @@ func TestSignin_SigninError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, http.StatusInternalServerError, he.Code)
 	assert.Equal(t, assert.AnError.Error(), he.Message)
+}
+
+func TestSetUserID_OK(t *testing.T) {
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/any", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSJ9.TcXz_IwlmxO5nPd3m0Yo67WyYptabkqZW4R9HNwPmKE")
+
+	rec := httptest.NewRecorder()
+	ctx := e.NewContext(req, rec)
+
+	authHandler := NewAuthHandler(nil, "secret")
+	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
+		SuccessHandler: authHandler.SetUserID,
+		SigningKey:     []byte("secret"),
+	})
+
+	h := jwtMiddleware(func(c echo.Context) error {
+		return c.String(http.StatusOK, "test")
+	})
+
+	h(ctx)
+
+	assert.Equal(t, "1", ctx.Get("user_id").(string))
 }
