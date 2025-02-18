@@ -25,6 +25,10 @@ func (c *Context) GetMongoURL() string {
 	return c.mongoURL
 }
 
+func (c *Context) GetPLDURL() string {
+	return c.pldURL
+}
+
 func GetContext() *Context {
 	return &Context{
 		jwtKey:   os.Getenv("JWT_KEY"),

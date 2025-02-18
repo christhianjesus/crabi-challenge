@@ -10,7 +10,6 @@ import (
 
 	"github.com/christhianjesus/crabi-challenge/internal/mocks"
 	"github.com/golang-jwt/jwt/v5"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -65,6 +64,23 @@ func TestLogin_BindError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, http.StatusBadRequest, he.Code)
 	assert.Equal(t, "unexpected EOF", he.Message)
+}
+
+func TestLogin_ValidateError(t *testing.T) {
+	body := strings.NewReader(`{"email": "an@email.com", "password": "123"}`)
+	req := httptest.NewRequest(http.MethodPost, "/login", body)
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	ctx := echo.New().NewContext(req, rec)
+
+	lg := setupAuthHandler(t)
+	err := SetValidator(lg.handler.Login)(ctx)
+	he := err.(*echo.HTTPError)
+
+	assert.Error(t, err)
+	assert.Equal(t, http.StatusBadRequest, he.Code)
+	assert.Equal(t, "Key: 'LoginRequest.password' Error:Field validation for 'password' failed on the 'min' tag", he.Message)
 }
 
 func TestLogin_LoginError(t *testing.T) {
@@ -145,6 +161,23 @@ func TestSignin_BindError(t *testing.T) {
 	assert.Equal(t, "unexpected EOF", he.Message)
 }
 
+func TestSignin_ValidateError(t *testing.T) {
+	body := strings.NewReader(`{"email": "an@email.com", "password": "123", "first_name": "firstname", "last_name": "lastname"}`)
+	req := httptest.NewRequest(http.MethodPost, "/signin", body)
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	ctx := echo.New().NewContext(req, rec)
+
+	lg := setupAuthHandler(t)
+	err := SetValidator(lg.handler.Signin)(ctx)
+	he := err.(*echo.HTTPError)
+
+	assert.Error(t, err)
+	assert.Equal(t, http.StatusBadRequest, he.Code)
+	assert.Equal(t, "Key: 'User.password' Error:Field validation for 'password' failed on the 'min' tag", he.Message)
+}
+
 func TestSignin_SigninError(t *testing.T) {
 	body := strings.NewReader(`{"email": "an@email.com", "password": "123", "first_name": "first_name", "last_name": "last_name"}`)
 	req := httptest.NewRequest(http.MethodPost, "/signin", body)
@@ -162,28 +195,4 @@ func TestSignin_SigninError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, http.StatusInternalServerError, he.Code)
 	assert.Equal(t, assert.AnError.Error(), he.Message)
-}
-
-func TestSetUserID_OK(t *testing.T) {
-	e := echo.New()
-
-	req := httptest.NewRequest(http.MethodGet, "/v1/any", nil)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSJ9.TcXz_IwlmxO5nPd3m0Yo67WyYptabkqZW4R9HNwPmKE")
-
-	rec := httptest.NewRecorder()
-	ctx := e.NewContext(req, rec)
-
-	authHandler := NewAuthHandler(nil, "secret")
-	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
-		SuccessHandler: authHandler.SetUserID,
-		SigningKey:     []byte("secret"),
-	})
-
-	h := jwtMiddleware(func(c echo.Context) error {
-		return c.String(http.StatusOK, "test")
-	})
-
-	h(ctx)
-
-	assert.Equal(t, "1", ctx.Get("user_id").(string))
 }
