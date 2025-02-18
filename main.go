@@ -34,7 +34,7 @@ func main() {
 
 	// Repositories
 	mongoUserRepository := infrastructure.NewMongoUserRepository(mongoClient.Database("default"))
-	pldRepository := infrastructure.NewPLDRepository(http.DefaultClient, c.pldURL)
+	pldRepository := infrastructure.NewPLDRepository(http.DefaultClient, c.GetPLDURL())
 
 	// Services
 	userService := application.NewUserService(mongoUserRepository, pldRepository)
@@ -46,8 +46,8 @@ func main() {
 
 	// Middlewares
 	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
-		SuccessHandler: authHandler.SetUserID,
-		SigningKey:     []byte(c.jwtKey),
+		SuccessHandler: infrastructure.SetUserID,
+		SigningKey:     c.GetJwtKey(),
 	})
 
 	e := echo.New()
@@ -55,9 +55,12 @@ func main() {
 	// Root level middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(infrastructure.SetValidator)
 
 	// Health
-	e.GET("/health", nil)
+	e.GET("/health", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
 
 	// Auth routes
 	e.POST("/signin", authHandler.Signin)

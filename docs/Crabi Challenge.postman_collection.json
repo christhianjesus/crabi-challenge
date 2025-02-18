@@ -88,56 +88,7 @@
 					]
 				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Cache-Control",
-						"value": "no-cache",
-						"name": "cache-control",
-						"type": "text"
-					},
-					{
-						"key": "Postman-Token",
-						"value": "<calculated when request is sent>",
-						"name": "postman-token",
-						"type": "text"
-					},
-					{
-						"key": "Host",
-						"value": "<calculated when request is sent>",
-						"name": "host",
-						"type": "text"
-					},
-					{
-						"key": "User-Agent",
-						"value": "PostmanRuntime/7.39.1",
-						"name": "user-agent",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "*/*",
-						"name": "accept",
-						"type": "text"
-					},
-					{
-						"key": "Accept-Encoding",
-						"value": "gzip, deflate, br",
-						"name": "accept-encoding",
-						"type": "text"
-					},
-					{
-						"key": "Connection",
-						"value": "keep-alive",
-						"name": "connection",
-						"type": "text"
-					},
-					{
-						"key": "",
-						"value": "",
-						"type": "text",
-						"disabled": true
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:8080/v1/user",
 					"protocol": "http",
@@ -148,6 +99,25 @@
 					"path": [
 						"v1",
 						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"health"
 					]
 				}
 			},

@@ -5,6 +5,7 @@ import (
 
 	"github.com/christhianjesus/crabi-challenge/internal/application"
 	"github.com/christhianjesus/crabi-challenge/internal/domain"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -19,19 +20,12 @@ func NewAuthHandler(srv application.AuthService, secret string) *authHandler {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type LoginResponse struct {
 	Token string `json:"token"`
-}
-
-// Helper function to set user_id context variable
-func (h *authHandler) SetUserID(c echo.Context) {
-	// by default token is stored under `user` key
-	claims := c.Get("user").(*jwt.Token).Claims.(jwt.MapClaims)
-	c.Set("user_id", claims["user_id"])
 }
 
 func (h *authHandler) Login(c echo.Context) error {
@@ -40,6 +34,12 @@ func (h *authHandler) Login(c echo.Context) error {
 
 	if err := c.Bind(request); err != nil {
 		return err
+	}
+
+	if validate, ok := c.Get(ValidatorCtxKey).(*validator.Validate); ok {
+		if err := validate.Struct(request); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	userID, err := h.srv.Login(ctx, request.Email, request.Password)
@@ -65,6 +65,12 @@ func (h *authHandler) Signin(c echo.Context) error {
 
 	if err := c.Bind(request); err != nil {
 		return err
+	}
+
+	if validate, ok := c.Get(ValidatorCtxKey).(*validator.Validate); ok {
+		if err := validate.Struct(request); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
 	}
 
 	err := h.srv.Signin(ctx, request)
